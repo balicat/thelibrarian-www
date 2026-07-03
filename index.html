@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Librarian</title>
+<meta name="description" content="The Librarian knows energy markets.">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: #0b0b0e;
+    color: #e8e2d5;
+    font-family: Charter, Georgia, 'Times New Roman', serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px; text-align: center;
+  }
+  .rule { width: 72px; height: 1px; background: #b08d3f; margin: 26px auto; opacity: 0.8; }
+  h1 {
+    font-size: clamp(28px, 6vw, 46px);
+    letter-spacing: 0.28em; font-weight: 400; text-indent: 0.28em;
+  }
+  .tag { font-style: italic; color: #9a927f; font-size: clamp(15px, 2.6vw, 19px); }
+  form { margin-top: 42px; width: 100%; max-width: 520px; }
+  input {
+    width: 100%; background: transparent; border: none;
+    border-bottom: 1px solid #3a3a42; outline: none;
+    color: #e8e2d5; font: inherit; font-size: 17px;
+    padding: 10px 2px; text-align: center; caret-color: #b08d3f;
+    transition: border-color 0.4s;
+  }
+  input:focus { border-color: #b08d3f; }
+  input::placeholder { color: #55514a; font-style: italic; }
+  #answer {
+    margin-top: 30px; min-height: 3.2em; font-size: 16.5px; line-height: 1.7;
+    color: #c9c2b2; max-width: 560px;
+  }
+  #answer .cursor { color: #b08d3f; animation: blink 1.1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  footer { position: fixed; bottom: 22px; font-size: 12.5px; color: #55514a; letter-spacing: 0.06em; }
+  footer a { color: #857c68; text-decoration: none; }
+  footer a:hover { color: #b08d3f; }
+</style>
+</head>
+<body>
+
+<h1>THE LIBRARIAN</h1>
+<div class="rule"></div>
+<div class="tag">knows energy markets.</div>
+
+<form id="ask" autocomplete="off">
+  <input id="q" type="text" placeholder="Ask the Librarian&hellip;" aria-label="Ask the Librarian">
+</form>
+<div id="answer"><span class="cursor">&#9612;</span></div>
+
+<footer>an <a href="https://energyscope.io">EnergyScope</a> service</footer>
+
+<script>
+  var reply = "The Librarian is still reading. 1.4 million series. 18 sources. 167 years of data. Come back soon.";
+  var el = document.getElementById("answer");
+  var typing = false;
+  document.getElementById("ask").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (typing) return;
+    var q = document.getElementById("q").value.trim();
+    if (!q) return;
+    typing = true;
+    el.innerHTML = "";
+    var i = 0;
+    (function type() {
+      if (i <= reply.length) {
+        el.innerHTML = reply.slice(0, i) + '<span class="cursor">&#9612;</span>';
+        i++;
+        setTimeout(type, 26);
+      } else {
+        typing = false;
+      }
+    })();
+  });
+</script>
+
+</body>
+</html>
