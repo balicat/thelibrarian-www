@@ -168,6 +168,7 @@
     <button type="button">Is the arbitrage to ship US crude to Europe open?</button>
     <button type="button">Is the Brent curve in backwardation?</button>
     <button type="button">Why do the spot and futures Brent-WTI spreads disagree?</button>
+    <button type="button">What is the evidence that the crude market is tight, and what points the other way?</button>
     <button type="button">Is the Oman crude curve in backwardation?</button>
     <button type="button">What is the 3-2-1 crack spread?</button>
     <button type="button">US crude stocks against the five-year average?</button>
@@ -230,6 +231,7 @@
       case "get_arbitrage_scenario": add("Recomputed the arbitrage with Brent " + signed(a.brent_change || 0) + ", WTI " + signed(a.wti_change || 0) + ", freight " + signed(a.freight_change_pct || 0) + "%"); break;
       case "get_crack_scenario": add("Recomputed the " + a.kind + " crack with crude " + signed(a.crude_change || 0) + ", gasoline " + signed(a.gasoline_change_pct || 0) + "%, distillate " + signed(a.distillate_change_pct || 0) + "%"); break;
       case "get_surprises": add("Ranked the watchlist's moves over the last " + a.window + " by how unusual they are"); break;
+      case "get_evidence": add("Scored the evidence for and against: " + String(a.thesis).replace(/_/g, " ")); break;
       case "get_arbitrage": add("Assessed the route " + String(a.route).replace(/_/g, " ")); break;
       default: add(t.tool);
     }
