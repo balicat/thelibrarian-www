@@ -3,9 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Librarian</title>
-<meta name="description" content="The Librarian answers oil and gas market questions from EnergyScope data and shows where every number came from.">
-<link rel="icon" href="data:,">
+<title>The Librarian: oil and gas market answers that show their sources</title>
+<meta name="description" content="Ask an oil or gas market question in plain English. The Librarian answers from EnergyScope data and shows the series, the tool calls and a recomputation check behind every number.">
+<link rel="canonical" href="https://thelibrarian.energy/">
+<meta name="theme-color" content="#f3ecdc">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Librarian">
+<meta property="og:title" content="The Librarian: oil and gas market answers that show their sources">
+<meta property="og:description" content="Ask whether an arbitrage is open, what moved this week, or how stocks compare with the five-year average. Every number comes with its series, the tool calls behind it and a recomputation check.">
+<meta property="og:url" content="https://thelibrarian.energy/">
+<meta property="og:image" content="https://thelibrarian.energy/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Librarian: answers oil and gas market questions, and shows where every number came from.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Librarian: oil and gas market answers that show their sources">
+<meta name="twitter:description" content="Ask an oil or gas market question. Every number comes with its series, the tool calls behind it and a recomputation check.">
+<meta name="twitter:image" content="https://thelibrarian.energy/og.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script defer data-domain="thelibrarian.energy" src="https://analytics.lostinkalymnos.com/js/script.js"></script>
 <style>
   :root {
     --paper: #f3ecdc; --card: #fdfaf2; --ink: #1b1813; --ink2: #3f392f; --ink3: #655d4e;
@@ -291,8 +307,13 @@
     loadStats();
   }
 
-  function ask(q) {
+  function track(name, props) {  // counts only: the question text is never sent to analytics
+    try { if (window.plausible) window.plausible(name, { props: props }); } catch (e) {}
+  }
+
+  function ask(q, how) {
     if (busy || !q) return;
+    track("Question", { how: turns ? "follow-up" : (how || "typed") });
     busy = true; go.disabled = true;
     if (!session) session = newSession();
     Array.prototype.forEach.call(thread.children, function (c) { c.classList.add("old"); });
@@ -307,7 +328,7 @@
     var done = false;
     function on(name, data) {
       if (name === "tool") steps.list.appendChild(describe(data));
-      else if (name === "answer") { done = true; render(card, steps, data); }
+      else if (name === "answer") { done = true; render(card, steps, data); if (data.checked === false) track("Check failed", {}); }
       else if (name === "error") { done = true; fail(card, steps, data.error || "The Librarian could not answer that just now."); }
     }
     fetch("/api/ask/stream", { method: "POST", headers: { "Content-Type": "application/json" },
@@ -346,7 +367,7 @@
 
   document.getElementById("ask").addEventListener("submit", function (e) { e.preventDefault(); ask(box.value.trim()); });
   Array.prototype.forEach.call(document.querySelectorAll("#examples button"), function (b) {
-    b.addEventListener("click", function () { box.value = b.textContent; ask(b.textContent); });
+    b.addEventListener("click", function () { box.value = b.textContent; ask(b.textContent, "example"); });
   });
   loadStats();
 </script>
