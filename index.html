@@ -107,6 +107,9 @@
   ol.steps li { padding: 1px 0; }
   ol.steps code { font-family: var(--mono); font-size: 14px; color: var(--blue); overflow-wrap: anywhere; }
   ul.caveats { margin-left: 20px; font-size: 16px; color: var(--ink2); }
+  .a .slot { border-bottom: 1px dotted var(--blue); cursor: help; }
+  .a .slot.on { background: rgba(120, 150, 200, 0.18); }
+  .slotinfo { margin: 6px 0 0; font-family: var(--mono); font-size: 12.5px; color: var(--ink2); min-height: 1.2em; overflow-wrap: anywhere; }
   .foot { margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--rule); font-size: 14px; color: var(--ink3); font-family: var(--mono); }
   .working { color: var(--ink2); font-style: italic; }
   .working::after { content: "…"; animation: dots 1.4s steps(4, end) infinite; display: inline-block; overflow: hidden; vertical-align: bottom; width: 0; }
@@ -399,6 +402,30 @@
     return row;
   }
 
+  // The summary in pieces: the model's words as plain text, and each slot that code filled as a marked span.
+  // Built as nodes with textContent only; nothing from a name, a unit or an address is ever parsed as HTML.
+  function summary(a) {
+    var box = el("div", "a"), info = el("div", "slotinfo", "");
+    var parts = a.parts || [];
+    if (!parts.length || a.degraded) { box.appendChild(document.createTextNode(a.summary || "")); return box; }
+    var wrap = document.createElement("div");
+    parts.forEach(function (p) {
+      if (!p.slot) { box.appendChild(document.createTextNode(p.text)); return; }
+      var span = el("span", "slot", p.text);
+      var where = "written by code \u00B7 source " + p.source + (p.date ? " \u00B7 value dated " + p.date : "") +
+        ((p.series || []).length ? " \u00B7 series " + p.series.slice(0, 4).join(", ") + (p.series.length > 4 ? " and " + (p.series.length - 4) + " more" : "") : "");
+      span.title = where;
+      span.addEventListener("click", function () {
+        Array.prototype.forEach.call(box.querySelectorAll(".slot.on"), function (o) { o.classList.remove("on"); });
+        span.classList.add("on");
+        info.textContent = where;
+      });
+      box.appendChild(span);
+    });
+    wrap.appendChild(box); wrap.appendChild(info);
+    return wrap;
+  }
+
   // Three levels: the answer; the analysis (what is unusual, charts, caveats); the audit trail, folded.
   function render(card, steps, a) {
     var pending = card.querySelector(".working");
@@ -412,12 +439,15 @@
     if (a.degraded) {
       card.appendChild(el("div", "whatif", "No summary: none that was written passed every check. The numbers are shown without one."));
     }
-    card.appendChild(el("div", "a", a.summary));
+    if (a.by_code) {
+      card.appendChild(el("div", "whatif", "Written by code alone: the language model is not available just now, so this example was answered from its fixed plan, with no model."));
+    }
+    card.appendChild(summary(a));
     if (n) {
       card.appendChild(el("div", "check " + (a.checked ? "ok" : "bad"), a.checked
         ? (a.degraded ? "\u2713 The sources below were recomputed from the data."
-          : "\u2713 The sources below were recomputed from the data after the answer was written, and every number and date in the text matches one of them. The wording around the numbers is checked by rules, not proved.")
-        : "\u26A0 A number, date or direction in this answer did not match the data on re-check. Treat it with care."));
+          : "\u2713 Every figure in the text was written by code, with its own name, unit and date, and recomputed from the data after the answer was written. The underlined words are code's: tap one to see its source. The words between them are " + (a.by_code ? "fixed." : "the model's, and are not checked."))
+        : "\u26A0 This answer did not match the data on re-check. Treat it with care."));
     }
     var contexts = readings.filter(function (r) { return r.context; })
       .map(function (r) { return { title: r.title.split(":")[0], text: r.context }; });
