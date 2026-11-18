@@ -4,16 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Librarian</title>
-<meta name="description" content="The Librarian knows energy markets.">
+<meta name="description" content="The Librarian answers oil and gas market questions from EnergyScope data and shows where every number came from.">
+<link rel="icon" href="data:,">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { height: 100%; }
+  html, body { min-height: 100%; }
   body {
     background: #0b0b0e;
     color: #e8e2d5;
     font-family: Charter, Georgia, 'Times New Roman', serif;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 24px; text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 12vh 16px 24px; text-align: center;
   }
   .rule { width: 72px; height: 1px; background: #b08d3f; margin: 26px auto; opacity: 0.8; }
   h1 {
@@ -21,7 +22,7 @@
     letter-spacing: 0.28em; font-weight: 400; text-indent: 0.28em;
   }
   .tag { font-style: italic; color: #9a927f; font-size: clamp(15px, 2.6vw, 19px); }
-  form { margin-top: 42px; width: 100%; max-width: 520px; }
+  form { margin-top: 42px; width: 100%; max-width: 560px; }
   input {
     width: 100%; background: transparent; border: none;
     border-bottom: 1px solid #3a3a42; outline: none;
@@ -31,87 +32,120 @@
   }
   input:focus { border-color: #b08d3f; }
   input::placeholder { color: #55514a; font-style: italic; }
+  #examples { margin-top: 16px; max-width: 640px; font-size: 13.5px; line-height: 2; color: #55514a; }
+  #examples button {
+    background: none; border: none; font: inherit; font-style: italic; color: #857c68;
+    cursor: pointer; padding: 0 7px;
+  }
+  #examples button:hover, #examples button:focus-visible { color: #b08d3f; outline: none; }
   #answer {
-    margin-top: 30px; min-height: 3.2em; font-size: 16.5px; line-height: 1.7;
-    color: #c9c2b2; max-width: 560px;
+    margin-top: 28px; min-height: 3.2em; font-size: 16.5px; line-height: 1.7;
+    color: #c9c2b2; max-width: 600px;
   }
   #answer .cursor { color: #b08d3f; animation: blink 1.1s step-end infinite; }
   @keyframes blink { 50% { opacity: 0; } }
-  #sources { margin-top: 18px; max-width: 640px; font: 12.5px/1.8 ui-monospace, Consolas, monospace; color: #857c68; }
-  #sources .caveat { font-family: inherit; font-style: italic; color: #6f685a; }
-  footer { position: fixed; bottom: 22px; font-size: 12.5px; color: #55514a; letter-spacing: 0.06em; }
+  #sources {
+    margin-top: 18px; width: 100%; max-width: 680px; text-align: left;
+    font: 12.5px/1.75 ui-monospace, Consolas, monospace; color: #857c68; overflow-wrap: anywhere;
+  }
+  #sources .head { margin-top: 12px; color: #55514a; letter-spacing: 0.12em; text-transform: uppercase; font-size: 10.5px; }
+  #sources .vals { color: #6f685a; }
+  #sources .caveat { font-family: Charter, Georgia, serif; font-style: italic; font-size: 13.5px; color: #6f685a; }
+  #sources .ok { color: #7d8a5c; }
+  #sources .bad { color: #b0623f; }
+  footer { margin-top: auto; padding-top: 48px; font-size: 12.5px; color: #55514a; letter-spacing: 0.06em; }
   footer a { color: #857c68; text-decoration: none; }
   footer a:hover { color: #b08d3f; }
+  @media (prefers-reduced-motion: reduce) { #answer .cursor { animation: none; } }
 </style>
 </head>
 <body>
 
 <h1>THE LIBRARIAN</h1>
 <div class="rule"></div>
-<div class="tag">knows energy markets.</div>
+<div class="tag">knows oil and gas markets, and shows its sources.</div>
 
 <form id="ask" autocomplete="off">
   <input id="q" type="text" maxlength="300" placeholder="Ask the Librarian&hellip;" aria-label="Ask the Librarian">
 </form>
+<div id="examples">
+  <button type="button">Is the Brent curve in backwardation?</button>&middot;<button type="button">What is the 3-2-1 crack spread?</button>&middot;<button type="button">US crude stocks against the five-year average?</button>&middot;<button type="button">How are funds positioned in WTI?</button>
+</div>
 <div id="answer"><span class="cursor">&#9612;</span></div>
 <div id="sources" aria-live="polite"></div>
 
-<footer>an <a href="https://energyscope.io">EnergyScope</a> service</footer>
+<footer>
+  an <a href="https://energyscope.io">EnergyScope</a> service &middot;
+  <a href="https://github.com/balicat/energyscope-desk-agent#readme">how it works, and its test results</a>
+</footer>
 
 <script>
-  // The Librarian answers from EnergyScope data. Every number shown under "Sources"
-  // came back from a tool call; the service rejects an answer whose numbers do not.
+  // The Librarian answers from EnergyScope data. The model chooses the tools and writes the
+  // sentences; code does the sums. An answer whose numbers do not trace to a tool result is
+  // sent back, and every answer is recomputed from the data before it is shown as checked.
   var API = "/api/ask";
   var el = document.getElementById("answer");
   var src = document.getElementById("sources");
+  var box = document.getElementById("q");
   var busy = false;
+  var instant = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function type(text, done) {
-    var i = 0;
+    var i = instant ? text.length : 0;
     (function step() {
       el.textContent = text.slice(0, i);
       var c = document.createElement("span");
       c.className = "cursor"; c.textContent = "▌";
       el.appendChild(c);
-      if (i < text.length) { i += 2; setTimeout(step, 14); } else if (done) { done(); }
+      if (i < text.length) { i += 3; setTimeout(step, 12); } else if (done) { done(); }
     })();
   }
 
-  function num(v) {
-    return Number(v).toLocaleString("en-GB", { maximumFractionDigits: 2 });
+  function num(v) { return Number(v).toLocaleString("en-GB", { maximumFractionDigits: 2 }); }
+  function signed(v) { return (v >= 0 ? "+" : "") + num(v); }
+
+  function row(text, cls, title) {
+    var d = document.createElement("div");
+    d.textContent = text;
+    if (cls) d.className = cls;
+    if (title) d.title = title;
+    src.appendChild(d);
   }
 
   function showSources(a) {
+    var n = (a.facts || []).length + (a.spreads || []).length + (a.readings || []).length;
+    if (n) row("Sources", "head");
     (a.facts || []).forEach(function (f) {
-      var row = document.createElement("div");
-      var line = f.series_id + "  ·  " + num(f.latest_value) + " " + f.units + "  ·  " + f.latest_period;
-      if (f.base_period) {
-        line += "  ·  " + (f.change_abs >= 0 ? "+" : "") + num(f.change_abs) +
-                " (" + (f.change_pct >= 0 ? "+" : "") + num(f.change_pct) + "%) since " + f.base_period;
-      }
-      row.textContent = line;
-      row.title = f.name;
-      src.appendChild(row);
+      var line = f.series_id + " · " + num(f.latest_value) + " " + f.units + " · " + f.latest_period;
+      if (f.base_period) line += " · " + signed(f.change_abs) + " (" + signed(f.change_pct) + "%) since " + f.base_period;
+      row(line, "", f.name);
     });
     (a.spreads || []).forEach(function (p) {
-      var row = document.createElement("div");
-      row.textContent = p.series_a + " − " + p.series_b + "  ·  " + num(p.value_a) + " − " + num(p.value_b) +
-                        " = " + num(p.spread) + " " + p.units + "  ·  " + p.period;
-      row.title = p.name_a + " minus " + p.name_b;
-      src.appendChild(row);
+      row(p.series_a + " − " + p.series_b + " · " + num(p.value_a) + " − " + num(p.value_b) + " = " +
+          num(p.spread) + " " + p.units + " · " + p.period, "", p.name_a + " minus " + p.name_b);
     });
-    (a.caveats || []).forEach(function (c) {
-      var row = document.createElement("div");
-      row.className = "caveat"; row.textContent = c;
-      src.appendChild(row);
+    (a.readings || []).forEach(function (r) {
+      row(r.title + " · " + r.period + " · " + r.units, "", r.series_ids.join(", "));
+      row(Object.keys(r.values).map(function (k) { return k.replace(/_/g, " ") + " " + num(r.values[k]); }).join(" · "), "vals");
     });
+    if ((a.trail || []).length) {
+      row("How it got there", "head");
+      row(a.trail.map(function (t) { return t.tool; }).join(" → "), "vals",
+          a.trail.map(function (t) { return t.tool + " " + JSON.stringify(t.args); }).join("\n"));
+    }
+    if (n) {
+      row("Check", "head");
+      if (a.checked) row("✓ every number recomputed from the data after the answer was written", "ok");
+      else row("⚠ a number did not match the data on re-check; treat this answer with care", "bad");
+    }
+    if ((a.caveats || []).length) {
+      row("Caveats", "head");
+      a.caveats.forEach(function (c) { row(c, "caveat"); });
+    }
   }
 
-  document.getElementById("ask").addEventListener("submit", function (e) {
-    e.preventDefault();
-    if (busy) return;
-    var q = document.getElementById("q").value.trim();
-    if (!q) return;
+  function ask(q) {
+    if (busy || !q) return;
     busy = true;
     src.textContent = "";
     type("The Librarian is reading…");
@@ -122,6 +156,14 @@
         type(r.body.summary, function () { showSources(r.body); busy = false; });
       })
       .catch(function () { type("The Librarian cannot be reached just now.", function () { busy = false; }); });
+  }
+
+  document.getElementById("ask").addEventListener("submit", function (e) {
+    e.preventDefault();
+    ask(box.value.trim());
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("#examples button"), function (b) {
+    b.addEventListener("click", function () { box.value = b.textContent; ask(b.textContent); });
   });
 </script>
 
