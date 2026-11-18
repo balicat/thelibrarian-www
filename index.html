@@ -143,6 +143,11 @@
   #stats { display: block; margin-bottom: 6px; }
   .nod { display: block; margin-top: 6px; font-size: 14px; color: var(--ink3); }
   .limits { margin: 14px 0 0; font-size: 15px; color: var(--ink2); }
+  .fb { margin-top: 12px; font-size: 15px; color: var(--ink2); }
+  .fb button { font: inherit; font-size: 14px; margin-left: 6px; padding: 2px 10px; border: 1px solid var(--ink2);
+               border-radius: 4px; background: transparent; color: var(--ink); cursor: pointer; }
+  .fb button:hover { background: var(--ink); color: #fff; }
+  .fb input { font: inherit; font-size: 14px; width: min(420px, 60%); padding: 3px 6px; border: 1px solid var(--ink2); border-radius: 4px; }
   @media (max-width: 560px) {
     body { font-size: 17px; } .card { padding: 18px 16px 16px; } form { flex-direction: column; }
     button.ask { padding: 11px 0; } .a { font-size: 18.5px; }
@@ -361,6 +366,38 @@
     return fig;
   }
 
+  // "Useful" or "Wrong" is recorded against this answer's id, beside its trace. A note is optional.
+  function feedbackRow(id) {
+    var row = el("div", "fb"), said = el("span", "", "Was this answer right and useful? ");
+    function send(verdict, note) {
+      return fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: id, verdict: verdict, note: note || "" }) });
+    }
+    function done(text) { row.textContent = text; }
+    var yes = el("button", "", "Useful"), no = el("button", "", "Wrong");
+    yes.type = no.type = "button";
+    yes.addEventListener("click", function () {
+      send("useful").then(function (r) { done(r.ok ? "Recorded against this answer. Thank you." : "Could not record that."); })
+        .catch(function () { done("Could not record that."); });
+    });
+    no.addEventListener("click", function () {
+      send("wrong").catch(function () {});
+      row.textContent = "Recorded as wrong. What was wrong? (optional) ";
+      var note = document.createElement("input"), add = el("button", "", "Send");
+      note.type = "text"; note.maxLength = 300; note.setAttribute("aria-label", "What was wrong");
+      add.type = "button";
+      add.addEventListener("click", function () {
+        var text = note.value.trim();
+        if (!text) return done("Recorded as wrong. Thank you.");
+        send("wrong", text).then(function () { done("Recorded with your note. Thank you."); })
+          .catch(function () { done("Recorded as wrong; the note could not be sent."); });
+      });
+      row.appendChild(note); row.appendChild(add);
+    });
+    row.appendChild(said); row.appendChild(yes); row.appendChild(no);
+    return row;
+  }
+
   // Three levels: the answer; the analysis (what is unusual, charts, caveats); the audit trail, folded.
   function render(card, steps, a) {
     var pending = card.querySelector(".working");
@@ -412,6 +449,7 @@
       audit.appendChild(el("div", "label", "How it got there"));
       audit.appendChild(steps.list);
     }
+    if (a.id) card.appendChild(feedbackRow(a.id));
     audit.appendChild(el("div", "foot", "answered in " + a.seconds + " s \u00B7 " + String(a.model).replace("anthropic:", "") +
       (a.follow_up ? " \u00B7 follow-up: earlier answers were context, numbers fetched again" : "")));
     card.appendChild(audit);

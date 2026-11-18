@@ -21,6 +21,7 @@ expect thelibrarian.energy /favicon-32.png 200 ""
 expect www.thelibrarian.energy / 301 "https://thelibrarian.energy/"
 expect www.thelibrarian.energy /x 301 "https://thelibrarian.energy/x"
 expect 10.0.0.9 / 200 ""
+expect thelibrarian.energy /llms.txt 200 ""
 curl -s -H "Host: thelibrarian.energy" "http://127.0.0.1:$PORT/" | grep -q "THE LIBRARIAN" || { echo "WRONG the page body is not the page"; fail=1; }
 curl -sI -H "Host: thelibrarian.energy" "http://127.0.0.1:$PORT/" | grep -qi "content-security-policy" || { echo "WRONG no security headers on the page"; fail=1; }
 exit $fail

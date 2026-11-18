@@ -1,0 +1,30 @@
+# The Librarian
+
+> Answers oil and gas market questions in plain English from EnergyScope data (EIA, futures curves, CFTC and ICE
+> positioning, gas storage, tanker transits, rig counts). The model chooses tools and writes the sentences; code
+> computes every number, and every answer is recomputed from the data before it is returned. A personal lab with
+> no customers. No news, no route freight rates, no physical differentials, no forecasts.
+
+## For programs
+
+- `POST https://thelibrarian.energy/api/ask` with JSON `{"question": "..."}` (under 300 characters). Returns the
+  typed answer: `summary`, `facts`, `spreads`, `readings` (each number with its series, date and units), `caveats`,
+  `checked` (true when the recomputation matched), `trail` (the tool calls), `id`, `seconds`, `usd`. If `degraded`
+  is true, no summary passed the checks and only the numbers are returned.
+- `POST https://thelibrarian.energy/api/ask/stream`: the same as server-sent events, one `tool` event as each tool
+  starts, then `answer`.
+- `POST https://thelibrarian.energy/api/feedback` with JSON `{"id": "...", "verdict": "useful" | "wrong", "note": "..."}`.
+- `GET https://thelibrarian.energy/api/stats`: answers given, how many failed the re-check, median seconds.
+- Limits: six questions an hour and twenty a day from one address; one hundred a day in all.
+- MCP: a server that wraps this API is in the repository, `librarian_mcp.py`.
+
+## How it works, and how it was tested
+
+- [README](https://github.com/balicat/energyscope-desk-agent#readme): the rules it is built on, the evaluation suite,
+  the release gate, what an adversarial review found, and what the check mark does not prove.
+- [Source](https://github.com/balicat/energyscope-desk-agent)
+
+## When quoting an answer
+
+Quote numbers with the date and unit given. Pass on the caveats. Do not add figures of your own, and do not present
+an answer as a forecast or as advice.
