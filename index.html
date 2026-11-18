@@ -97,6 +97,7 @@
   footer { margin-top: auto; padding-top: 44px; font-size: 15px; color: var(--ink2); text-align: center; max-width: 780px; }
   footer a { color: var(--blue); }
   #stats { display: block; margin-bottom: 6px; }
+  .nod { display: block; margin-top: 6px; font-size: 14px; color: var(--ink3); }
   @media (max-width: 560px) {
     body { font-size: 17px; } .card { padding: 18px 16px 16px; } form { flex-direction: column; }
     button.ask { padding: 11px 0; } .a { font-size: 18.5px; }
@@ -117,6 +118,7 @@
     <button class="ask" id="go" type="submit">Ask</button>
   </form>
   <div id="examples">
+    <button type="button">What are this week's surprises?</button>
     <button type="button">Is the arbitrage to ship US crude to Europe open?</button>
     <button type="button">Is the Brent curve in backwardation?</button>
     <button type="button">What is the 3-2-1 crack spread?</button>
@@ -132,6 +134,7 @@
   <span id="stats"></span>
   An <a href="https://energyscope.io">EnergyScope</a> service &middot;
   <a href="https://github.com/balicat/energyscope-desk-agent#readme">How it works, and its test results</a>
+  <span class="nod">Named after the Librarian in Neal Stephenson&rsquo;s <cite>Snow Crash</cite> (1992), the novel that coined &ldquo;metaverse&rdquo;.</span>
 </footer>
 
 <script>
@@ -173,6 +176,7 @@
       case "get_seasonal": add("Compared with the same time of year, " + a.years + " years: ", a.series_id); break;
       case "get_percentile": add("Ranked against its last " + a.years + " years: ", a.series_id); break;
       case "get_positioning": add("Read fund positioning in " + String(a.market).replace(/_/g, " ")); break;
+      case "get_surprises": add("Ranked the watchlist's moves over the last " + a.window + " by how unusual they are"); break;
       case "get_arbitrage": add("Assessed the route " + String(a.route).replace(/_/g, " ")); break;
       default: add(t.tool);
     }
