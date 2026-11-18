@@ -1,3 +1,3 @@
 FROM nginx:alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY index.html favicon.svg og.png robots.txt /usr/share/nginx/html/
+COPY index.html og.png icon-224.png favicon-32.png favicon-64.png apple-touch-icon.png robots.txt /usr/share/nginx/html/
