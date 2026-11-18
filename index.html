@@ -371,11 +371,15 @@
     if (readings.some(function (r) { return r.hypothetical; })) {
       card.appendChild(el("div", "whatif", "What-if: scenario numbers are not market observations"));
     }
+    if (a.degraded) {
+      card.appendChild(el("div", "whatif", "No summary: none that was written passed every check. The numbers are shown without one."));
+    }
     card.appendChild(el("div", "a", a.summary));
     if (n) {
       card.appendChild(el("div", "check " + (a.checked ? "ok" : "bad"), a.checked
-        ? "\u2713 Every number was recomputed from the data after the answer was written."
-        : "\u26A0 A number did not match the data on re-check. Treat this answer with care."));
+        ? (a.degraded ? "\u2713 The sources below were recomputed from the data."
+          : "\u2713 The sources below were recomputed from the data after the answer was written, and every number and date in the text matches one of them.")
+        : "\u26A0 A number, date or direction in this answer did not match the data on re-check. Treat it with care."));
     }
     var contexts = readings.filter(function (r) { return r.context; })
       .map(function (r) { return { title: r.title.split(":")[0], text: r.context }; });
