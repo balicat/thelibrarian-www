@@ -142,6 +142,7 @@
   footer a { color: var(--blue); }
   #stats { display: block; margin-bottom: 6px; }
   .nod { display: block; margin-top: 6px; font-size: 14px; color: var(--ink3); }
+  .limits { margin: 14px 0 0; font-size: 15px; color: var(--ink2); }
   @media (max-width: 560px) {
     body { font-size: 17px; } .card { padding: 18px 16px 16px; } form { flex-direction: column; }
     button.ask { padding: 11px 0; } .a { font-size: 18.5px; }
@@ -175,6 +176,8 @@
     <button type="button">How are funds positioned in WTI?</button>
     <button type="button">Would the US crude arbitrage open if freight fell 20%?</button>
   </div>
+  <p class="limits">It reads prices, stocks, futures curves, fund positioning and ship counts. It has no news, no route
+  freight rates and no physical differentials, and it does not forecast.</p>
   <div id="convo" aria-live="polite"></div>
   <div id="thread" aria-live="polite"></div>
 </main>
@@ -374,13 +377,15 @@
         ? "\u2713 Every number was recomputed from the data after the answer was written."
         : "\u26A0 A number did not match the data on re-check. Treat this answer with care."));
     }
-    var contexts = readings.filter(function (r) { return r.context; });
+    var contexts = readings.filter(function (r) { return r.context; })
+      .map(function (r) { return { title: r.title.split(":")[0], text: r.context }; });
+    spreads.forEach(function (s) { if (s.context) contexts.push({ title: "The spread", text: s.context }); });
     if (contexts.length || charts.length) {
       card.appendChild(el("div", "label", "Analysis"));
-      contexts.forEach(function (r) {
+      contexts.forEach(function (c) {
         var para = el("p", "ctx");
-        para.appendChild(el("strong", "", r.title.split(":")[0] + ". "));
-        para.appendChild(document.createTextNode(r.context));
+        para.appendChild(el("strong", "", c.title + ". "));
+        para.appendChild(document.createTextNode(c.text));
         card.appendChild(para);
       });
       charts.forEach(function (c) { card.appendChild(chart(c)); });
