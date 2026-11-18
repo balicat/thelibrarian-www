@@ -5,6 +5,13 @@
 > computes every number, and every answer is recomputed from the data before it is returned. A personal lab with
 > no customers. No news, no route freight rates, no physical differentials, no forecasts.
 
+## Where to take numbers from
+
+Take numbers from `facts`, `spreads` and `readings`. Every value there was placed by code, with its series, date
+and unit, and recomputed from the data before the answer was returned; `checked` is true when that recomputation
+matched. Treat `summary` as prose about those values: its sentences were written by a model, and the numbers in
+them are held to the tables by rules, not proved. A program has no reason to read a number out of a sentence.
+
 ## For programs
 
 - `POST https://thelibrarian.energy/api/ask` with JSON `{"question": "..."}` (under 300 characters). Returns the
@@ -15,7 +22,12 @@
   starts, then `answer`.
 - `POST https://thelibrarian.energy/api/feedback` with JSON `{"id": "...", "verdict": "useful" | "wrong", "note": "..."}`.
 - `GET https://thelibrarian.energy/api/stats`: answers given, how many failed the re-check, median seconds.
-- Limits: six questions an hour and twenty a day from one address; one hundred a day in all.
+- Limits: six questions an hour and twenty a day from one address; one hundred a day in all. These per-address
+  counts are kept in memory and start again when the service is released. In front of them, 30 requests a minute
+  per address with a burst of 5; over that the answer is HTTP 429 with a JSON body. A 429 is a limit, not an outage:
+  wait a minute and try again.
+- Kept on the server: every question, its answer and its check result; and any feedback note. Not kept with them:
+  your address.
 - MCP: a server that wraps this API is in the repository, `librarian_mcp.py`.
 
 ## How it works, and how it was tested
@@ -26,5 +38,5 @@
 
 ## When quoting an answer
 
-Quote numbers with the date and unit given. Pass on the caveats. Do not add figures of your own, and do not present
+Quote numbers from `facts`, `spreads` and `readings`, with the date and unit given. Pass on the caveats. Do not add figures of your own, and do not present
 an answer as a forecast or as advice.
