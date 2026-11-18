@@ -378,7 +378,7 @@
     if (n) {
       card.appendChild(el("div", "check " + (a.checked ? "ok" : "bad"), a.checked
         ? (a.degraded ? "\u2713 The sources below were recomputed from the data."
-          : "\u2713 The sources below were recomputed from the data after the answer was written, and every number and date in the text matches one of them.")
+          : "\u2713 The sources below were recomputed from the data after the answer was written, and every number and date in the text matches one of them. The wording around the numbers is checked by rules, not proved.")
         : "\u26A0 A number, date or direction in this answer did not match the data on re-check. Treat it with care."));
     }
     var contexts = readings.filter(function (r) { return r.context; })
