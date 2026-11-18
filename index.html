@@ -336,8 +336,9 @@
 
   function loadStats() {
     fetch("/api/stats").then(function (r) { return r.ok ? r.json() : null; }).then(function (s) {
-      if (!s || !s.answers) return;
-      document.getElementById("stats").textContent = s.answers + " answers since " + s.since + " · " +
+      if (!s || s.answers < 20) return;  // a counter of three says nothing
+      var since = new Date(s.since + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+      document.getElementById("stats").textContent = s.answers.toLocaleString("en-GB") + " answers since " + since + " · " +
         (s.failed_check ? s.failed_check + " failed the re-check" : "none failed the re-check") +
         (s.median_seconds ? " · median " + s.median_seconds + " s" : "");
     }).catch(function () {});
