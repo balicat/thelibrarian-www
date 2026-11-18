@@ -22,7 +22,7 @@ them are held to the tables by rules, not proved. A program has no reason to rea
   starts, then `answer`.
 - `POST https://thelibrarian.energy/api/feedback` with JSON `{"id": "...", "verdict": "useful" | "wrong", "note": "..."}`.
 - `GET https://thelibrarian.energy/api/stats`: answers given, how many failed the re-check, median seconds.
-- Limits: six questions an hour and twenty a day from one address; one hundred a day in all. These per-address
+- Limits: 30 questions an hour and 100 a day from one address; 300 a day in all. These per-address
   counts are kept in memory and start again when the service is released. In front of them, 30 requests a minute
   per address with a burst of 5; over that the answer is HTTP 429 with a JSON body. A 429 is a limit, not an outage:
   wait a minute and try again.
