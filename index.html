@@ -167,6 +167,8 @@
     <button type="button">Is tanker freight unusually high, and when was it last this high?</button>
     <button type="button">Is the arbitrage to ship US crude to Europe open?</button>
     <button type="button">Is the Brent curve in backwardation?</button>
+    <button type="button">What is the Brent-WTI spread on futures, and is it unusual?</button>
+    <button type="button">Is the Oman crude curve in backwardation?</button>
     <button type="button">What is the 3-2-1 crack spread?</button>
     <button type="button">US crude stocks against the five-year average?</button>
     <button type="button">How are funds positioned in WTI?</button>
@@ -218,6 +220,8 @@
       case "get_change": add("Compared with " + a.lookback_days + " days earlier: ", a.series_id); break;
       case "get_spread": add("Subtracted one series from the other: ", a.series_a + " − " + a.series_b); break;
       case "get_curve": add("Read the " + a.market + " futures curve"); break;
+      case "get_futures_spread": add("Computed Brent minus WTI on futures of the same delivery month"); break;
+      case "get_futures_crack": add("Computed the " + a.kind + " crack spread on futures of one delivery month"); break;
       case "get_crack_spread": add("Computed the " + a.kind + " crack spread"); break;
       case "get_seasonal": add("Compared with the same time of year, " + a.years + " years: ", a.series_id); break;
       case "get_percentile": add("Ranked against its last " + a.years + " years: ", a.series_id); break;
