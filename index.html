@@ -428,11 +428,11 @@
     box.appendChild(el("summary", "", "Reproduce in Excel: " + sheets.length + (sheets.length === 1 ? " sheet" : " sheets")));
     var file = a.excel_file, version = (file && file.addin) || "3.2.0";
     var how = el("p", "how");
-    how.appendChild(document.createTextNode("Each sheet fetches its inputs on fixed dates and does the arithmetic in plain Excel, so you can check a number without trusting this page. Open the workbook, click Enable Editing if Excel shows it in Protected View, press Refresh All on the EnergyScope tab, and compare column B with column C; column D says the word same, or gives the difference. It needs the "));
+    how.appendChild(document.createTextNode("Each sheet fetches its inputs on fixed dates and does the arithmetic in plain Excel, so you can check a number without trusting this page. Open the workbook, click Enable Editing if Excel shows it in Protected View, and press Refresh All on the EnergyScope tab. Each row has its series and its date in cells of their own, and the Value beside them is fetched from those two cells, so you can change either and watch the value follow. Reported is what the answer said, and Check says the word same or gives the difference. It needs the "));
     var link = el("a", "", "EnergyScope add-in");
     link.href = "https://energyscope.io/excel";
     how.appendChild(link);
-    how.appendChild(document.createTextNode(", version " + version + " or later, and a key. The key is free, but it is sent by a person after you ask, so not at once. Until a refresh the cells that fetch are empty and the ones that calculate from them read #VALUE!; without a key column B says so in words; without the add-in it reads #NAME?. The formulas are written and checked against the data by code, and sheets of this kind were run in Excel when the feature was released."));
+    how.appendChild(document.createTextNode(", version " + version + " or later, and a key. The key is free, but it is sent by a person after you ask, so not at once. Until a refresh the cells that fetch are empty and the ones that calculate from them read #VALUE!; without a key the Value cell says so in words; without the add-in it reads #NAME?. The formulas are written and checked against the data by code, and sheets of this kind were run in Excel when the feature was released."));
     box.appendChild(how);
     if (file && file.xlsx) {
       var get = el("p", "how"), dl = el("a", "xl-file", "Download the workbook (.xlsx)");
@@ -442,7 +442,7 @@
         dl.href = URL.createObjectURL(new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
         dl.download = "librarian-" + String(a.id || "answer").replace(/[^A-Za-z0-9_-]/g, "") + ".xlsx";
         get.appendChild(dl);
-        get.appendChild(document.createTextNode(" One tab for each sheet below. Use this where Excel separates arguments with a semicolon and writes decimals with a comma (Spain, Germany, France): there a pasted formula is refused."));
+        get.appendChild(document.createTextNode(" One tab for each sheet below, with values shown to two decimals (the cells hold every digit). Use this where Excel separates arguments with a semicolon and writes decimals with a comma (Spain, Germany, France): there a pasted formula is refused."));
         box.appendChild(get);
       } catch (e) { /* no workbook: the sheets below can still be copied */ }
       if (file.given_at) {
