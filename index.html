@@ -117,6 +117,7 @@
   }
   details.excel p.how { font-size: 15px; color: var(--ink2); margin: 8px 0; }
   .xl { margin: 12px 0 16px; }
+  .xl .xl-only { font-size: 12px; color: var(--muted, #666); white-space: nowrap; }
   .xl .xl-head { display: flex; gap: 10px; align-items: baseline; justify-content: space-between; flex-wrap: wrap; }
   .xl .xl-title { font-size: 15px; font-weight: 600; }
   .xl button { font: inherit; font-size: 14px; padding: 2px 10px; cursor: pointer; }
@@ -466,7 +467,10 @@
           navigator.clipboard.writeText(sh.tsv).then(function () { done(true); }, function () { done(false); });
         } else { done(false); }
       });
-      head.appendChild(copy);
+      // A sheet with a window takes its statistics over a table that only the workbook holds: pasted at A1 its
+      // formulas would name a W that is not there. So no copy button, and a line below saying what W is.
+      if (sh.window) head.appendChild(el("span", "xl-only", "in the workbook only"));
+      else head.appendChild(copy);
       wrap.appendChild(head);
       var scroll = el("div", "xl-scroll"), table = el("table"), body = el("tbody");
       sh.rows.forEach(function (r) {
@@ -477,9 +481,14 @@
         body.appendChild(tr);
       });
       table.appendChild(body); scroll.appendChild(table); wrap.appendChild(scroll);
+      if (sh.window) {
+        wrap.appendChild(el("p", "how", "W is the window: every value of " + sh.window.series_id + " from " + sh.window.start
+          + " to the date of the sheet. In the workbook it is a column of this tab, with its dates beside it and a chart; "
+          + "the first day of the window sits in cell C2 and can be changed. This sheet cannot be pasted on its own."));
+      }
       box.appendChild(wrap);
     });
-    var without = (a.readings || []).filter(function (r) { return !/^(curve|crack|seasonal):/.test(r.key) || r.hypothetical; });
+    var without = (a.readings || []).filter(function (r) { return !/^(curve|crack|seasonal|percentile|positioning):/.test(r.key) || r.hypothetical; });
     if (without.length) {
       box.appendChild(el("p", "how", "No sheet yet for: " + without.map(function (r) { return r.title.split(":")[0]; }).join("; ") + "."));
     }
