@@ -488,7 +488,9 @@
       }
       box.appendChild(wrap);
     });
-    var without = (a.readings || []).filter(function (r) { return !/^(curve|crack|seasonal|percentile|positioning):/.test(r.key) || r.hypothetical; });
+    // by whether a sheet came, not by the reading's kind: a sheet that would not reproduce is withheld (a rounding
+    // tie, a quarterly series), and the page must then say there is none
+    var without = (a.readings || []).filter(function (r) { return !sheets.some(function (s) { return s.title === r.title; }); });
     if (without.length) {
       box.appendChild(el("p", "how", "No sheet yet for: " + without.map(function (r) { return r.title.split(":")[0]; }).join("; ") + "."));
     }
