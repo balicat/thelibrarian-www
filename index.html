@@ -422,7 +422,7 @@
     box.appendChild(el("summary", "", "Reproduce in Excel: " + sheets.length + (sheets.length === 1 ? " sheet" : " sheets")));
     var file = a.excel_file, version = (file && file.addin) || "3.2.0";
     var how = el("p", "how");
-    how.appendChild(document.createTextNode("Each sheet fetches its inputs on fixed dates and does the arithmetic in plain Excel, so you can check a number without trusting this page. Open the workbook, click Enable Editing if Excel shows it in Protected View, press Refresh All on the EnergyScope tab, and compare column B with column C; column D says "same" or gives the difference. It needs the "));
+    how.appendChild(document.createTextNode("Each sheet fetches its inputs on fixed dates and does the arithmetic in plain Excel, so you can check a number without trusting this page. Open the workbook, click Enable Editing if Excel shows it in Protected View, press Refresh All on the EnergyScope tab, and compare column B with column C; column D says the word same, or gives the difference. It needs the "));
     var link = el("a", "", "EnergyScope add-in");
     link.href = "https://energyscope.io/excel";
     how.appendChild(link);

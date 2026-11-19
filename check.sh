@@ -5,6 +5,18 @@
 #   ./check.sh            needs docker; exits 1 on any wrong answer
 set -euo pipefail
 cd "$(dirname "$0")"
+# The page is one inline script. If it does not parse, none of it runs and no question can be asked, in any
+# browser. On 19 Nov 2026 a sentence with double quotes inside a double-quoted string was committed, and nothing
+# here would have seen it: every check below asks nginx for bytes, none reads them as a program. Needs node.
+python3 - > /tmp/page-script.$$.js <<'PY'
+import re, sys
+found = re.findall(r"<script>(.*?)</script>", open("index.html", encoding="utf-8").read(), flags=re.S)
+if not found:
+    sys.exit("no inline script found in index.html")
+print("\n;\n".join(found))
+PY
+if node --check /tmp/page-script.$$.js; then echo "ok    the page's script parses"; else echo "WRONG the page's script does not parse"; rm -f /tmp/page-script.$$.js; exit 1; fi
+rm -f /tmp/page-script.$$.js
 NAME=thelib-check-$$; PORT=${PORT:-8798}
 docker build -q -t "$NAME" . > /dev/null
 docker run -d --rm --name "$NAME" -p "127.0.0.1:$PORT:80" "$NAME" > /dev/null
