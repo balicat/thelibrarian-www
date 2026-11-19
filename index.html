@@ -170,6 +170,9 @@
   @media (max-width: 560px) {
     body { font-size: 17px; } .card { padding: 18px 16px 16px; } form { flex-direction: column; }
     button.ask { padding: 11px 0; } .a { font-size: 18.5px; }
+    /* The Excel tables on a phone: the label was nowrap at 335 px in a 279 px box, so the formula got 46 px and
+       the value was off screen (the reviewer, 19 Nov 2026). Labels wrap, the formula keeps a readable width. */
+    .xl td { white-space: normal; } .xl td.f { min-width: 11em; } .xl td.n { white-space: nowrap; }
   }
 </style>
 </head>
@@ -449,6 +452,9 @@
         box.appendChild(el("p", "how", "Answer given on " + file.given_at + ". If a value on the latest day or two of a futures series differs later, the source has revised it since."));
       }
     }
+    // The tables below are the plain form, not the workbook's layout: say so, or the paragraph above describes
+    // columns the reader cannot see here (the reviewer, 19 Nov 2026).
+    box.appendChild(el("p", "how", "Below, the same sheets in plain form, for pasting: what each row is, its formula with the series and the date written inside it, and the value reported. Copy for Excel puts one sheet on the clipboard; paste it at cell A1 of an empty sheet and the formulas land in column B. The workbook holds the same formulas, laid out with a header and a Check column."));
     sheets.forEach(function (sh) {
       var wrap = el("div", "xl"), head = el("div", "xl-head");
       head.appendChild(el("span", "xl-title", sh.title));
