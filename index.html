@@ -114,6 +114,7 @@
   .xl .xl-head { display: flex; gap: 10px; align-items: baseline; justify-content: space-between; flex-wrap: wrap; }
   .xl .xl-title { font-size: 15px; font-weight: 600; }
   .xl button { font: inherit; font-size: 14px; padding: 2px 10px; cursor: pointer; }
+  details.excel a.xl-file { font-weight: 600; }
   .xl .xl-scroll { overflow-x: auto; }
   .xl table { border-collapse: collapse; font-size: 14px; margin-top: 4px; }
   .xl td { padding: 2px 10px 2px 0; border-bottom: 1px solid var(--line, #ddd); vertical-align: top; white-space: nowrap; }
@@ -412,19 +413,36 @@
   }
 
   // Formulas that reproduce the numbers in Excel. Written and checked by code on the server; a sheet that did
-  // not reproduce is not sent. Label | formula | the value reported, to paste at cell A1.
+  // not reproduce is not sent. Label | formula | the value reported, to paste at cell A1, and the same sheets
+  // as one workbook to download (a.excel_file), which does not depend on the reader's locale.
   function excelBlock(a) {
     var sheets = a.excel || [];
     if (!sheets.length) return null;
     var box = el("details", "excel");
     box.appendChild(el("summary", "", "Reproduce in Excel: " + sheets.length + (sheets.length === 1 ? " sheet" : " sheets")));
+    var file = a.excel_file, version = (file && file.addin) || "3.2.0";
     var how = el("p", "how");
-    how.appendChild(document.createTextNode("Each sheet fetches its inputs on fixed dates and does the arithmetic in plain Excel, so you can check a number without trusting this page. Copy a sheet, paste it at cell A1 of an empty sheet, and compare column B with column C. It needs the "));
+    how.appendChild(document.createTextNode("Each sheet fetches its inputs on fixed dates and does the arithmetic in plain Excel, so you can check a number without trusting this page. Open the workbook, press Refresh All on the EnergyScope tab, and compare column B with column C; column D is the difference. It needs the "));
     var link = el("a", "", "EnergyScope add-in");
     link.href = "https://energyscope.io/excel";
     how.appendChild(link);
-    how.appendChild(document.createTextNode(" and a free key. If column B stays empty, press Refresh All in the EnergyScope tab. The formulas were checked against the data by code; they have not been run in your Excel."));
+    how.appendChild(document.createTextNode(", version " + version + " or later, and a key. The key is free, but it is sent by a person after you ask, so not at once. Until a refresh column B is empty; without a key it says so in words; without the add-in it reads #NAME?. The formulas are written and checked against the data by code, and sheets of this kind were run in Excel when the feature was released."));
     box.appendChild(how);
+    if (file && file.xlsx) {
+      var get = el("p", "how"), dl = el("a", "xl-file", "Download the workbook (.xlsx)");
+      try {
+        var bin = atob(file.xlsx), bytes = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        dl.href = URL.createObjectURL(new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+        dl.download = "librarian-" + String(a.id || "answer").replace(/[^A-Za-z0-9_-]/g, "") + ".xlsx";
+        get.appendChild(dl);
+        get.appendChild(document.createTextNode(" One tab for each sheet below. Use this where Excel separates arguments with a semicolon and writes decimals with a comma (Spain, Germany, France): there a pasted formula is refused."));
+        box.appendChild(get);
+      } catch (e) { /* no workbook: the sheets below can still be copied */ }
+      if (file.given_at) {
+        box.appendChild(el("p", "how", "Answer given on " + file.given_at + ". If a value on the latest day or two of a futures series differs later, the source has revised it since."));
+      }
+    }
     sheets.forEach(function (sh) {
       var wrap = el("div", "xl"), head = el("div", "xl-head");
       head.appendChild(el("span", "xl-title", sh.title));
