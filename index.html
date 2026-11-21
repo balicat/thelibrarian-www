@@ -192,6 +192,9 @@
     <button class="ask" id="go" type="submit">Ask</button>
   </form>
   <div id="examples">
+    <button type="button">Which market signals and contradictions are firing?</button>
+    <button type="button">What did the latest weekly EIA petroleum report show?</button>
+    <button type="button">Show me five years of WTI spot prices.</button>
     <button type="button">What should I be watching this week?</button>
     <button type="button">Is tanker freight unusually high, and when was it last this high?</button>
     <button type="button">Is the arbitrage to ship US crude to Europe open?</button>
@@ -204,7 +207,8 @@
     <button type="button">How are funds positioned in WTI?</button>
     <button type="button">Would the US crude arbitrage open if freight fell 20%?</button>
   </div>
-  <p class="limits">It reads prices, stocks, futures curves, fund positioning and ship counts. It has no news, no route
+  <p class="limits">It reads prices, stocks, futures curves, fund positioning and ship counts, and uses the EnergyScope
+  server's own analytics, signals and weekly reports, the same ones the Excel add-in shows. It has no news, no route
   freight rates and no physical differentials, and it does not forecast. Each question, its answer and any note you
   send are kept on the server; your address is not kept with them.</p>
   <div id="convo" aria-live="polite"></div>
@@ -490,7 +494,11 @@
     });
     // by whether a sheet came, not by the reading's kind: a sheet that would not reproduce is withheld (a rounding
     // tie, a quarterly series), and the page must then say there is none
-    var without = (a.readings || []).filter(function (r) { return !sheets.some(function (s) { return s.title === r.title; }); });
+    // a sheet's title is the reading's, or the reading's after the add-in function it calls ("ES.Seasonal: ...")
+    // or after what it rebuilds ("Rank from the values: ...", "History: ...")
+    var without = (a.readings || []).filter(function (r) {
+      return !sheets.some(function (s) { return s.title === r.title || s.title.slice(-(r.title.length + 2)) === ": " + r.title; });
+    });
     if (without.length) {
       box.appendChild(el("p", "how", "No sheet yet for: " + without.map(function (r) { return r.title.split(":")[0]; }).join("; ") + "."));
     }
@@ -513,8 +521,8 @@
     card.appendChild(el("div", "a", a.summary));
     if (n) {
       card.appendChild(el("div", "check " + (a.checked ? "ok" : "bad"), a.checked
-        ? (a.degraded ? "\u2713 The sources below were recomputed from the data."
-          : "\u2713 The sources below were recomputed from the data after the answer was written, and every number and date in the text matches one of them. The wording around the numbers is checked by rules, not proved.")
+        ? (a.degraded ? "\u2713 The sources below were checked again: recomputed from the data, or asked of the EnergyScope server again."
+          : "\u2713 The sources below were checked again after the answer was written (recomputed from the data or, for the EnergyScope server's own analytics, the same request sent again), and every number and date in the text matches one of them. The wording around the numbers is checked by rules, not proved.")
         : "\u26A0 A number, date or direction in this answer did not match the data on re-check. Treat it with care."));
     }
     var contexts = readings.filter(function (r) { return r.context; })
