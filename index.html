@@ -521,8 +521,8 @@
     card.appendChild(el("div", "a", a.summary));
     if (n) {
       card.appendChild(el("div", "check " + (a.checked ? "ok" : "bad"), a.checked
-        ? (a.degraded ? "\u2713 The sources below were checked again: recomputed from the data, or asked of the EnergyScope server again."
-          : "\u2713 The sources below were checked again after the answer was written (recomputed from the data or, for the EnergyScope server's own analytics, the same request sent again), and every number and date in the text matches one of them. The wording around the numbers is checked by rules, not proved.")
+        ? (a.degraded ? "\u2713 The sources below were checked again: recomputed from the data, or asked of the EnergyScope server again (not computed a second way)."
+          : "\u2713 The sources below were checked again after the answer was written (recomputed from the data or, for the EnergyScope server's analytics, asked of the server again: that confirms its answer and re-reads the inputs of its signals, but does not compute the figures a second way), and every number and date in the text matches one of them. The wording around the numbers is checked by rules, not proved.")
         : "\u26A0 A number, date or direction in this answer did not match the data on re-check. Treat it with care."));
     }
     var contexts = readings.filter(function (r) { return r.context; })
