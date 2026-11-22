@@ -306,6 +306,23 @@
     return wrap;
   }
 
+  function codeTable(rows) {
+    var wrap = el("div", "tablewrap"), table = el("table"), head = el("tr");
+    rows[0].forEach(function (h) { head.appendChild(el("th", "", h)); });
+    table.appendChild(head);
+    rows.slice(1).forEach(function (row, i) {
+      var tr = el("tr");
+      row.forEach(function (cell, j) {
+        var td = el("td", "", cell);
+        if (i === rows.length - 2) td.style.fontWeight = "600";  // the overall balance
+        tr.appendChild(td);
+      });
+      table.appendChild(tr);
+    });
+    wrap.appendChild(table);
+    return wrap;
+  }
+
   function readingCard(r) {
     var d = el("div", "reading");
     d.appendChild(el("h3", "", r.title));
@@ -526,11 +543,13 @@
         : "\u26A0 A number, date or direction in this answer did not match the data on re-check. Treat it with care."));
     }
     var contexts = readings.filter(function (r) { return r.context; })
-      .map(function (r) { return { title: r.title.split(":")[0], text: r.context }; });
+      .map(function (r) { return { title: r.title.split(":")[0], text: r.context, table: r.table }; });
     spreads.forEach(function (s) { if (s.context) contexts.push({ title: "The spread", text: s.context }); });
     if (contexts.length || charts.length) {
       card.appendChild(el("div", "label", "Analysis"));
       contexts.forEach(function (c) {
+        // A table written by code (the evidence scorecard: each group's verdict and why), shown as it is
+        if (c.table && c.table.length > 1) card.appendChild(codeTable(c.table));
         var para = el("p", "ctx");
         para.appendChild(el("strong", "", c.title + ". "));
         para.appendChild(document.createTextNode(c.text));
