@@ -88,6 +88,7 @@
     text-transform: uppercase; color: var(--ink2); border-bottom: 1.5px solid var(--ink3); padding: 5px 12px 5px 0;
   }
   td { vertical-align: top; border-bottom: 1px solid var(--rule); padding: 8px 12px 8px 0; color: var(--ink); }
+  table.code td { overflow-wrap: anywhere; }  /* signal names such as steep_backwardation must wrap at phone width */
   td.n, th.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
   td:last-child, th:last-child { padding-right: 0; }
   .id { font-family: var(--mono); font-size: 14px; color: var(--blue); overflow-wrap: anywhere; }
@@ -307,7 +308,7 @@
   }
 
   function codeTable(rows) {
-    var wrap = el("div", "tablewrap"), table = el("table"), head = el("tr");
+    var wrap = el("div", "tablewrap"), table = el("table", "code"), head = el("tr");
     rows[0].forEach(function (h) { head.appendChild(el("th", "", h)); });
     table.appendChild(head);
     rows.slice(1).forEach(function (row, i) {
