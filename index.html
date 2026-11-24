@@ -249,11 +249,21 @@
     return Array.prototype.map.call(a, function (b) { return ("0" + b.toString(16)).slice(-2); }).join("");
   }
 
+  // A step shows only what its tool validated (the service's es_agent/trail.py): a search's matched words, known
+  // series ids, fixed choices, numbers. A call the tool refused carries no arguments, and is shown as refused.
+  var NEEDS = { get_latest: ["series_ids"], get_change: ["series_id", "lookback_days"], get_spread: ["series_a", "series_b"],
+    get_curve: ["market"], get_futures_crack: ["kind"], get_crack_spread: ["kind"], get_seasonal: ["series_id", "years"],
+    get_percentile: ["series_id", "years"], get_positioning: ["market"], get_watch: ["window"], get_crack_scenario: ["kind"],
+    get_surprises: ["window"], get_evidence: ["thesis"], get_arbitrage: ["route"] };
   function describe(t) {
     var a = t.args || {}, li = el("li");
     function add(text, code) { li.appendChild(document.createTextNode(text)); if (code) li.appendChild(el("code", "", code)); }
+    if (t.tool === "unknown tool") { add("Asked for a tool the Librarian does not have"); return li; }
+    if ((NEEDS[t.tool] || []).some(function (k) { return a[k] === undefined; })) {
+      add(String(t.tool).replace(/_/g, " ") + " (refused)"); return li;
+    }
     switch (t.tool) {
-      case "search_series": add("Searched " + (a.dataset ? a.dataset + " " : "") + "for “" + a.query + "”"); break;
+      case "search_series": add(a.query ? "Searched " + (a.dataset ? a.dataset + " " : "") + "for “" + a.query + "”" : "Searched the catalogue"); break;
       case "get_latest": add("Read the latest value of ", (a.series_ids || []).join(", ")); break;
       case "get_change": add("Compared with " + a.lookback_days + " days earlier: ", a.series_id); break;
       case "get_spread": add("Subtracted one series from the other: ", a.series_a + " − " + a.series_b); break;
