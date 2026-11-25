@@ -116,6 +116,30 @@
     content: ""; display: inline-block; width: 18px; height: 18px; margin: 0 7px 0 2px; vertical-align: -3px;
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Crect width='18' height='18' rx='3' fill='%231d6f42'/%3E%3Cpath d='M4 4.5h10v9H4z' fill='none' stroke='%23fff' stroke-width='1.2'/%3E%3Cpath d='M4 7.5h10M4 10.5h10M8 4.5v9' stroke='%23fff' stroke-width='1.2'/%3E%3C/svg%3E") no-repeat center / contain;
   }
+  details.deeper { margin-top: 14px; }
+  details.deeper > summary { cursor: pointer; font-size: 16px; font-weight: 600; color: var(--ink); }
+  /* An arrow-down tile in front of the line, our own drawing in CSS, like the Excel sign beside it. */
+  details.deeper > summary::before {
+    content: ""; display: inline-block; width: 18px; height: 18px; margin: 0 7px 0 2px; vertical-align: -3px;
+    border-radius: 3px; background: var(--accent); clip-path: polygon(50% 100%, 0 40%, 25% 40%, 25% 0, 75% 0, 75% 40%, 100% 40%);
+  }
+  details.deeper p.how { font-size: 15px; color: var(--ink2); margin: 8px 0; }
+  details.deeper ol.dd-steps { margin-left: 22px; font-size: 15.5px; }
+  details.deeper ol.dd-steps li.done { color: var(--ink3); }
+  details.deeper .dd-tag { font-family: var(--mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--blue); margin-left: 6px; }
+  details.deeper .dd-lead { margin: 10px 0 14px; }
+  details.deeper .dd-lead .why { font-size: 15.5px; }
+  details.deeper .dd-lead .num { font-family: var(--mono); font-size: 12.5px; color: var(--accent); margin-right: 6px; }
+  details.deeper pre.dd-call {
+    margin-top: 4px; background: #efe7d2; border: 1px solid var(--rule); border-radius: 3px; padding: 8px 10px;
+    font-family: var(--mono); font-size: 13px; color: var(--blue); white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  details.deeper ul.dd-list { margin-left: 20px; font-size: 15.5px; color: var(--ink2); }
+  details.deeper ul.dd-list b { font-family: var(--mono); font-size: 12.5px; font-weight: 400; color: var(--ink3); }
+  details.deeper .dd-copy { margin-top: 14px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  details.deeper .dd-copy button { font: inherit; font-size: 15px; padding: 5px 16px; cursor: pointer; }
+  details.deeper .dd-copy .said { font-size: 14px; color: var(--ink2); }
+  details.deeper p.planned { font-size: 13.5px; color: var(--ink3); margin-top: 10px; }
   details.excel p.how { font-size: 15px; color: var(--ink2); margin: 8px 0; }
   .xl { margin: 12px 0 16px; }
   .xl .xl-only { font-size: 12px; color: var(--muted, #666); white-space: nowrap; }
@@ -454,6 +478,66 @@
     return row;
   }
 
+  // The rest of an analyst's routine as calls for the reader's own agent. Built by code on the server (the model
+  // is never asked for it) and sent as a.deeper only when a playbook matches. Every string is set as text.
+  function deeperBlock(a) {
+    var d = a.deeper;
+    if (!d || !d.leads || !d.leads.length) return null;
+    var box = el("details", "deeper");
+    box.appendChild(el("summary", "", "Dig deeper: " + d.leads.length + (d.leads.length === 1 ? " call" : " calls") + " for your own agent"));
+    box.appendChild(el("p", "how", "Routine: " + d.playbook.title + ". The answer above already did the steps marked done; the rest are calls to run with your own agent and its own model, on the EnergyScope data tools (MCP server). A free key: "));
+    var link = el("a", "", "energyscope.io/signup");
+    link.href = "https://energyscope.io/signup"; link.rel = "noopener";
+    box.lastChild.appendChild(link);
+    var ol = el("ol", "dd-steps"), all = [];
+    (d.done || []).forEach(function (s) { all.push([s, true]); });
+    (d.left || []).forEach(function (s) { all.push([s, false]); });
+    all.sort(function (x, y) { return x[0].step - y[0].step; }).forEach(function (p) {
+      var li = el("li", p[1] ? "done" : "", p[0].text); li.value = p[0].step;
+      li.appendChild(el("span", "dd-tag", p[1] ? "done in the answer" : "left"));
+      ol.appendChild(li);
+    });
+    box.appendChild(ol);
+    box.appendChild(el("div", "label", "Calls"));
+    d.leads.forEach(function (l) {
+      var w = el("div", "dd-lead"), c = l.covers, p = el("p", "why");
+      p.appendChild(el("span", "num", "step " + (c && c.length > 1 ? c[0] + "-" + c[c.length - 1] : l.step)));
+      p.appendChild(document.createTextNode(l.why));
+      w.appendChild(p);
+      var args = JSON.stringify(l.args).slice(1, -1).replace(/,"/g, ', "').replace(/"([a-z_]+)":/g, "$1=");
+      w.appendChild(el("pre", "dd-call", l.tool + "(" + args + ")"));
+      box.appendChild(w);
+    });
+    if ((d.notes || []).length) {
+      box.appendChild(el("div", "label", "Analyst notes"));
+      var nl = el("ul", "dd-list");
+      d.notes.forEach(function (n) { var li = el("li"); li.appendChild(el("b", "", n.about + " ")); li.appendChild(document.createTextNode(n.text)); nl.appendChild(li); });
+      box.appendChild(nl);
+    }
+    if ((d.must_say || []).length) {
+      box.appendChild(el("div", "label", "A good answer must"));
+      var ml = el("ul", "dd-list");
+      d.must_say.forEach(function (m) { ml.appendChild(el("li", "", m)); });
+      box.appendChild(ml);
+    }
+    var row = el("div", "dd-copy"), b = el("button", "", "Copy for your agent"), said = el("span", "said", "");
+    b.type = "button";
+    function ok() { said.textContent = "Copied. Paste it into your own agent."; }
+    function fallback() {
+      var t = el("textarea"); t.value = d.for_your_agent; document.body.appendChild(t); t.select();
+      try { document.execCommand("copy"); ok(); } catch (e) { said.textContent = "Copy failed."; }
+      t.remove();
+    }
+    b.addEventListener("click", function () {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(d.for_your_agent).then(ok, fallback); else fallback();
+    });
+    row.appendChild(b); row.appendChild(said); box.appendChild(row);
+    if ((d.planned || []).length) {
+      box.appendChild(el("p", "planned", "Planned tools: " + d.planned.map(function (x) { return x.tool + " (" + x.why + ")"; }).join("; ") + "."));
+    }
+    return box;
+  }
+
   // Formulas that reproduce the numbers in Excel. Written and checked by code on the server; a sheet that did
   // not reproduce is not sent. Label | formula | the value reported, to paste at cell A1, and the same sheets
   // as one workbook to download (a.excel_file), which does not depend on the reader's locale.
@@ -576,6 +660,8 @@
     }
     var xl = excelBlock(a);
     if (xl) card.appendChild(xl);
+    var dd = deeperBlock(a);
+    if (dd) card.appendChild(dd);
     var audit = el("details", "audit"), calls = steps.list.children.length;
     audit.appendChild(el("summary", "", "Audit trail: " + n + (n === 1 ? " source, " : " sources, ") + calls +
       (calls === 1 ? " tool call, " : " tool calls, ") + a.seconds + " s"));
